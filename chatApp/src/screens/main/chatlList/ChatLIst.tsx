@@ -1,11 +1,15 @@
 // ChatList.js
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View, Text, FlatList, TouchableOpacity,
+  StyleSheet, ActivityIndicator, Image, Button
+} from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchChatRooms } from '../../../redux/actions/Messages';
 import { useNavigation } from '@react-navigation/native';
 import socket from '../../../utils/Socket';
+import { staticAvatarImageUrl } from '../../../utils/uri';
 
 const ChatList = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -15,39 +19,53 @@ const ChatList = () => {
   const token = useSelector((state) => state.auth.user);
 
   const dispatch = useDispatch();
-  useEffect(() => {
 
+  useEffect(() => {
     if (token) {
-      dispatch(fetchChatRooms(token));
+      dispatch(fetchChatRooms(token)).then(() => setRefreshing(false));
     }
 
     // Connect to the Socket.io server
-    socket.connect();
+     socket.connect();
+
     // Listen for chat room updates
-    socket.on('connection', () => {
+  /*   socket.on('chatRoomUpdate', () => {
       // Fetch chat rooms again when an update is received
-      console.log('client connected');
-      //fetchChatRooms(token);
-    });
+      dispatch(fetchChatRooms(token));
+    }); */
 
     return () => {
-      // Disconnect the Socket.io connection when the component unmounts
-      socket.disconnect();
+      // Disconnect the Socket.io connection and remove listeners when the component unmounts
+      //socket.disconnect();
+      //socket.off('chatRoomUpdate');
     };
-  }, [token]);
+  }, []);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    fetchChatRooms(token).then(() => setRefreshing(false));
+    dispatch(fetchChatRooms(token)).then(() => setRefreshing(false));
   };
 
   const navigateToChatRoom = (chatRoom) => {
     navigation.navigate('ChatRoom', { chatRoom });
   };
 
+  if (refreshing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#25d366" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Chat Rooms</Text>
+      <Button
+        title="Create Room"
+        onPress={() => {
+          navigation.navigate('Users');
+        }}
+      />
       {error ? (
         <Text style={styles.errorText}>Error loading chat rooms. Please try again.</Text>
       ) : (
@@ -59,7 +77,12 @@ const ChatList = () => {
               style={styles.chatItem}
               onPress={() => navigateToChatRoom(item)}
             >
-              <Text style={styles.chatName}>{item.name}</Text>
+              <Image source={{ uri: staticAvatarImageUrl }} style={styles.chatAvatar} />
+              <View style={styles.chatInfo}>
+                <Text style={styles.chatName}>{item.chatRoom.name}</Text>
+                <Text style={styles.lastMessage}>{'item.lastMessage'}</Text>
+              </View>
+              <Text style={styles.messageTime}>{'item.messageTime'}</Text>
             </TouchableOpacity>
           )}
           refreshing={refreshing}
@@ -71,31 +94,49 @@ const ChatList = () => {
 };
 
 export default ChatList;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  errorText: {
+    fontSize: 16,
+    color: 'red',
+    textAlign: 'center',
+    padding: 16,
   },
   chatItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
+  chatAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  chatInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
   chatName: {
     fontSize: 18,
+    fontWeight: 'bold',
   },
-  errorText: {
-    fontSize: 18,
-    color: 'red',
+  lastMessage: {
+    fontSize: 16,
+    color: '#777',
+  },
+  messageTime: {
+    fontSize: 14,
+    color: '#777',
   },
 });

@@ -1,6 +1,5 @@
 import { FETCH_CHAT_ROOMS_FAILURE, FETCH_CHAT_ROOMS_SUCCESS, GET_MESSAGES_FAILURE, GET_MESSAGES_SUCCESS } from "../constant";
 
-// redux/reducers/messages.js
 const initialState = {
     messages: [],
     chatRooms: [],
