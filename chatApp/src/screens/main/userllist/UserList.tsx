@@ -44,8 +44,7 @@ const UserList = () => {
                     <TouchableOpacity
                         style={styles.userItem}
                         onPress={() => {
-                            // Navigate to a chat screen with this user (replace with your navigation logic)
-                            navigation.navigate('ChatScreen', { user: item });
+                            navigation.navigate('ChatRoomScreen', { isCreated: true, chatId: '6524afe7d6ef1696e3e1fa93', user: item });
                         }}
                     >
                         <Image source={{ uri: staticAvatarImageUrl }} style={styles.profilePicture} />

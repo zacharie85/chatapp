@@ -1,12 +1,10 @@
-// ChatList.js
-
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
   StyleSheet, ActivityIndicator, Image, Button
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchChatRooms } from '../../../redux/actions/Messages';
+import { fetchChatRooms, getCurrentUser } from '../../../redux/actions/Messages';
 import { useNavigation } from '@react-navigation/native';
 import socket from '../../../utils/Socket';
 import { staticAvatarImageUrl } from '../../../utils/uri';
@@ -21,25 +19,25 @@ const ChatList = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+
     if (token) {
       dispatch(fetchChatRooms(token)).then(() => setRefreshing(false));
+      dispatch(getCurrentUser(token));
     }
 
-    // Connect to the Socket.io server
-     socket.connect();
-
     // Listen for chat room updates
-  /*   socket.on('chatRoomUpdate', () => {
+    socket.on('chatRoomUpdate', () => {
+      console.log('chatRoomUpdate')
       // Fetch chat rooms again when an update is received
       dispatch(fetchChatRooms(token));
-    }); */
+    });
 
     return () => {
       // Disconnect the Socket.io connection and remove listeners when the component unmounts
-      //socket.disconnect();
-      //socket.off('chatRoomUpdate');
+      socket.disconnect();
+      socket.off('chatRoomUpdate');
     };
-  }, []);
+  }, [socket]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -47,7 +45,7 @@ const ChatList = () => {
   };
 
   const navigateToChatRoom = (chatRoom) => {
-    navigation.navigate('ChatRoom', { chatRoom });
+    navigation.navigate('ChatRoomScreen', { isCreated: false, chatRoom });
   };
 
   if (refreshing) {
@@ -80,9 +78,9 @@ const ChatList = () => {
               <Image source={{ uri: staticAvatarImageUrl }} style={styles.chatAvatar} />
               <View style={styles.chatInfo}>
                 <Text style={styles.chatName}>{item.chatRoom.name}</Text>
-                <Text style={styles.lastMessage}>{'item.lastMessage'}</Text>
+                <Text style={styles.lastMessage}>{item.lastMessage}</Text>
               </View>
-              <Text style={styles.messageTime}>{'item.messageTime'}</Text>
+              <Text style={styles.messageTime}>{item.messageTime}</Text>
             </TouchableOpacity>
           )}
           refreshing={refreshing}

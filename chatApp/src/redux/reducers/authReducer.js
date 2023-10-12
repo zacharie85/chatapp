@@ -5,7 +5,7 @@ const initialState = {
     error: null,
 };
 
-const authReducer = (state = initialState, action: { type: any; user: any; error: any; }) => {
+const authReducer = (state = initialState, action) => {
     switch (action.type) {
         case USER_REGISTER_SUCCESS:
             return {
